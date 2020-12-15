@@ -2,17 +2,20 @@ package example.mh.demothreadsapp
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.BatteryManager
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.activity_main.*
 
 const val LOC_REQUEST_CODE = 80
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -29,7 +32,13 @@ class MainActivity : AppCompatActivity() {
     private fun onStartButtonPressed(){
         start_button_id.setOnClickListener {
             getCurrentLocationAsText()
+            getBatteryPercentage()
         }
+    }
+
+    private fun getBatteryPercentage(){
+        val batteryManager : BatteryManager = this.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+        val batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
     }
 
     private fun getCurrentLocationAsText(){
