@@ -23,27 +23,37 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var lastLocation: Location? = null
     private lateinit var saveLocation: String
+    private lateinit var locationData: Deferred<String>
+    private lateinit var battery: Deferred<String>
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         onStartButtonPressed()
+
+        stop_button_id.setOnClickListener {
+            start_button_id.isEnabled = true
+            locationData.cancel()
+            battery.cancel()
+        }
     }
 
     private fun onStartButtonPressed(){
         start_button_id.setOnClickListener {
+            it.isEnabled = false
             CoroutineScope(Dispatchers.Main).launch {
                 Log.i("MAINLOG", "Operations starting...")
 
                 for (i in 1..1000000) {
-                    val location = async(IO) {
+                    locationData = async(IO) {
                         getLocation()
                     }
-                    val battery = async(IO) {
+                     battery = async(IO) {
                         getBatteryLevel()
                     }
-                    Log.i("MAINLOG", "Result: ${location.await()}, battery: ${battery.await()}")
+                    Log.i("MAINLOG", "Result: ${locationData.await()}, battery: ${battery.await()}")
                 }
             }
         }
