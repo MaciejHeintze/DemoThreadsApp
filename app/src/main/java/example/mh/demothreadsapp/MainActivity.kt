@@ -11,8 +11,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
@@ -107,5 +106,39 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Location permission denied!", Toast.LENGTH_LONG).show();
             }
         }
+    }
+    override fun onStart() {
+        super.onStart()
+        locationRequest()
+    }
+
+    private fun locationRequest(){
+        val mLocationRequest = LocationRequest.create()
+        mLocationRequest.interval = 60000
+        mLocationRequest.fastestInterval = 5000
+        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        val mLocationCallback: LocationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                for (location in locationResult.locations) {
+                    if (location != null) {
+                        lastLocation = location
+                    }
+                }
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
+                    LOC_REQUEST_CODE)
+            } else {
+                LocationServices.getFusedLocationProviderClient(this)
+                    .requestLocationUpdates(mLocationRequest, mLocationCallback, null)
+            }
+        } else {
+            LocationServices.getFusedLocationProviderClient(this)
+                .requestLocationUpdates(mLocationRequest, mLocationCallback, null)
+        }
+
     }
 }
