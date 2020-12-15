@@ -8,11 +8,14 @@ import android.location.Location
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.IO
 
 const val LOC_REQUEST_CODE = 80
 
@@ -31,21 +34,44 @@ class MainActivity : AppCompatActivity() {
 
     private fun onStartButtonPressed(){
         start_button_id.setOnClickListener {
-            getCurrentLocationAsText()
-            getBatteryPercentage()
+            CoroutineScope(Dispatchers.Main).launch {
+                Log.i("MAINLOG", "Operations starting...")
+
+                for (i in 1..1000000) {
+                    val location = async(IO) {
+                        getLocation()
+                    }
+                    val battery = async(IO) {
+                        getBatteryLevel()
+                    }
+                    Log.i("MAINLOG", "Result: ${location.await()}, battery: ${battery.await()}")
+                }
+            }
         }
     }
 
-    private fun getBatteryPercentage(){
-        val batteryManager : BatteryManager = this.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
-        val batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+    private suspend fun getLocation() : String{
+        delay(3000)
+        return getCurrentLocationAsText()
     }
 
-    private fun getCurrentLocationAsText(){
+    private suspend fun getBatteryLevel() : String{
+        delay(2000)
+        return getBatteryPercentage()
+    }
+
+    private fun getBatteryPercentage() : String{
+        val batteryManager : BatteryManager = this.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+        val batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+        return batteryLevel.toString()
+    }
+
+    private fun getCurrentLocationAsText() : String{
         getCurrentLocation()
         val lat = lastLocation?.latitude.toString()
         val lon = lastLocation?.longitude.toString()
         saveLocation = "$lat, $lon"
+        return saveLocation
     }
 
     private fun getCurrentLocation() {
