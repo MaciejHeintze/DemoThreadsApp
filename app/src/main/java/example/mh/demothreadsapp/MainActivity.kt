@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
 
                     if(resultList.size > 100){
                         cancelCalculations()
+                        sendDataToServer()
                         break
                     }
 
@@ -88,6 +89,10 @@ class MainActivity : AppCompatActivity() {
     private suspend fun getBatteryLevel() : String{
         delay(B_SEC_DELAY)
         return getBatteryPercentage()
+    }
+
+    private fun sendDataToServer(){
+        Log.i(LOG_TAG, "Send to http server message: ${resultList.joinToString()}")
     }
 
     private fun getBatteryPercentage() : String{
@@ -185,6 +190,5 @@ class MainActivity : AppCompatActivity() {
     private fun cancelCalculations(){
         locationData.cancel()
         battery.cancel()
-        Log.i(LOG_TAG, "List size reached! List: $resultList")
     }
 }
