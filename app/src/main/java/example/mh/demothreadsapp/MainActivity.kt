@@ -17,6 +17,10 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
 
 const val LOC_REQUEST_CODE = 80
+const val LOG_TAG = "MAIN_TAG"
+const val A_SEC_DELAY = 5000L
+const val B_SEC_DELAY = 3000L
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -25,47 +29,64 @@ class MainActivity : AppCompatActivity() {
     private lateinit var saveLocation: String
     private lateinit var locationData: Deferred<String>
     private lateinit var battery: Deferred<String>
-
+    private var resultList = mutableListOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         onStartButtonPressed()
-
-        stop_button_id.setOnClickListener {
-            start_button_id.isEnabled = true
-            locationData.cancel()
-            battery.cancel()
-        }
+        onStopButtonClicked()
     }
 
     private fun onStartButtonPressed(){
         start_button_id.setOnClickListener {
             it.isEnabled = false
             CoroutineScope(Dispatchers.Main).launch {
-                Log.i("MAINLOG", "Operations starting...")
+                Log.i(LOG_TAG, "Operations starting...")
 
                 for (i in 1..1000000) {
+
+                    if(resultList.size > 100){
+                        cancelCalculations()
+                        break
+                    }
+
                     locationData = async(IO) {
                         getLocation()
                     }
                      battery = async(IO) {
                         getBatteryLevel()
                     }
-                    Log.i("MAINLOG", "Result: ${locationData.await()}, battery: ${battery.await()}")
+                    getLocationValue(locationData.await())
+                    getBatteryValue(battery.await())
                 }
             }
         }
     }
+    private suspend fun getLocationValue(locationData: String) {
+        CoroutineScope(IO).launch {
+            delay(1000)
+            resultList.add(locationData)
+            Log.i(LOG_TAG, "Location added: $locationData")
+        }
+    }
+
+    private suspend fun getBatteryValue(batteryData: String) {
+        CoroutineScope(IO).launch {
+            delay(1000)
+            resultList.add(batteryData)
+            Log.i(LOG_TAG, "Battery added: $batteryData")
+        }
+    }
 
     private suspend fun getLocation() : String{
-        delay(3000)
+        delay(A_SEC_DELAY)
         return getCurrentLocationAsText()
     }
 
     private suspend fun getBatteryLevel() : String{
-        delay(2000)
+        delay(B_SEC_DELAY)
         return getBatteryPercentage()
     }
 
@@ -150,5 +171,20 @@ class MainActivity : AppCompatActivity() {
                 .requestLocationUpdates(mLocationRequest, mLocationCallback, null)
         }
 
+    }
+
+    private fun onStopButtonClicked(){
+        stop_button_id.setOnClickListener {
+            start_button_id.isEnabled = true
+            locationData.cancel()
+            battery.cancel()
+            Log.i(LOG_TAG, "List: $resultList")
+        }
+    }
+
+    private fun cancelCalculations(){
+        locationData.cancel()
+        battery.cancel()
+        Log.i(LOG_TAG, "List size reached! List: $resultList")
     }
 }
