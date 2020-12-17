@@ -83,6 +83,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun sendDataToServer(){
         Log.i(LOG_TAG, "Send to http server message: ${resultList.joinToString()}")
+        resultList.clear()
     }
 
     private fun getBatteryPercentage() : String{
